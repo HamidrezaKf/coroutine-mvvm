@@ -52,6 +52,7 @@ class TaskFragment : Fragment(R.layout.fragment_task) {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.currentSearchQuery.value = newText.orEmpty()
                 return true
             }
         })
