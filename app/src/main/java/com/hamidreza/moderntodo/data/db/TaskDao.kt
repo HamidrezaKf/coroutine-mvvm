@@ -11,14 +11,14 @@ interface TaskDao {
     fun getTasks(query: String,sortOrder: SortOrder,hideCompleted: Boolean) : Flow<List<Task>> {
         return when(sortOrder){
             SortOrder.BY_NAME -> getTasksSortedByName(query,hideCompleted)
-            SortOrder.BY_DATE -> getTasksSortedByName(query, hideCompleted)
+            SortOrder.BY_DATE -> getTasksSortedByDateCreated(query, hideCompleted)
         }
     }
 
-    @Query("SELECT * FROM Task WHERE (completed != :hideCompleted OR completed =0) AND name LIKE '%' || :query || '%' ORDER BY important,name DESC")
+    @Query("SELECT * FROM Task WHERE (completed != :hideCompleted OR completed =0) AND name LIKE '%' || :query || '%' ORDER BY important DESC,name ")
     fun getTasksSortedByName(query:String,hideCompleted:Boolean) : Flow<List<Task>>
 
-    @Query("SELECT * FROM Task WHERE (completed != :hideCompleted OR completed =0) AND name LIKE '%' || :query || '%' ORDER BY important,created DESC")
+    @Query("SELECT * FROM Task WHERE (completed != :hideCompleted OR completed =0) AND name LIKE '%' || :query || '%' ORDER BY important DESC,created ")
     fun getTasksSortedByDateCreated(query:String,hideCompleted:Boolean) : Flow<List<Task>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
