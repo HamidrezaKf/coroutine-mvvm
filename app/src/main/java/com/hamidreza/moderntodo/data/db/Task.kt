@@ -7,7 +7,7 @@ import java.text.DateFormat
 @Entity
 data class Task(
     @PrimaryKey(autoGenerate = true)
-    val id:Int,
+    val id:Int=0,
     val name: String,
     val important: Boolean = false,
     val completed: Boolean = false,
