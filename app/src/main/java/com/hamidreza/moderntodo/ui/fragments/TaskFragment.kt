@@ -5,6 +5,7 @@ import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hamidreza.moderntodo.R
 import com.hamidreza.moderntodo.data.db.Task
@@ -14,10 +15,12 @@ import com.hamidreza.moderntodo.ui.viewmodels.TaskViewModel
 import com.hamidreza.moderntodo.utils.SortOrder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
-class TaskFragment : Fragment(R.layout.fragment_task) {
+class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickListener {
 
     private var _binding: FragmentTaskBinding? = null
     private val binding get() = _binding!!
@@ -40,7 +43,7 @@ class TaskFragment : Fragment(R.layout.fragment_task) {
 
 
     fun setUpRecyclerView() {
-        taskAdapter = TaskAdapter()
+        taskAdapter = TaskAdapter(this)
         binding.apply {
             recyclerViewTasks.apply {
                 adapter = taskAdapter
@@ -65,22 +68,27 @@ class TaskFragment : Fragment(R.layout.fragment_task) {
             }
         })
 
+        val hideCompleted = menu.findItem(R.id.action_hide_completed_tasks)
+        viewLifecycleOwner.lifecycleScope.launch {
+            hideCompleted.isChecked = viewModel.preferenceFlow.first().hideCompleted
+        }
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
 
             R.id.action_sort_by_name -> {
-                viewModel.sortOrder.value = SortOrder.BY_NAME
+                viewModel.onSortOrderSelecte(SortOrder.BY_NAME)
                 true
             }
             R.id.action_sort_by_date_created -> {
-                viewModel.sortOrder.value = SortOrder.BY_DATE
+                viewModel.onSortOrderSelecte(SortOrder.BY_DATE)
                 true
             }
             R.id.action_hide_completed_tasks -> {
                 item.isChecked = !item.isChecked
-                viewModel.hideCompleted.value = item.isChecked
+                viewModel.onHideCompletedClick(item.isChecked)
                 true
             }
             R.id.action_delete_all_completed_tasks -> {
@@ -94,5 +102,13 @@ class TaskFragment : Fragment(R.layout.fragment_task) {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onItemClick(task: Task) {
+
+    }
+
+    override fun onCheckBoxClick(task: Task, isChecked: Boolean) {
+        viewModel.onCheckBoxClick(task,isChecked)
     }
 }

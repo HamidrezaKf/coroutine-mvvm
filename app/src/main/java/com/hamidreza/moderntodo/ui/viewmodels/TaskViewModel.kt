@@ -33,18 +33,26 @@ class TaskViewModel @ViewModelInject constructor(
         dao.getTasks(it.searchQuery, it.sortOrder, it.hideCompleted)
     }
 
+    val getTasks = tasksFlow.asLiveData()
+
     fun onSortOrderSelecte(sortOrder: SortOrder) =
         viewModelScope.launch {
             preferencesManager.updateSortOrder(sortOrder)
         }
 
-    suspend fun onHideCompletedClick(hideCompleted: Boolean) =
+     fun onHideCompletedClick(hideCompleted: Boolean) =
         viewModelScope.launch {
             preferencesManager.updateHideCompleted(hideCompleted)
         }
 
 
-    val getTasks = tasksFlow.asLiveData()
+
+    fun onItemClick(task: Task){
+
+    }
+    fun onCheckBoxClick(task: Task, isChecked: Boolean) = viewModelScope.launch {
+        dao.updateTask(task.copy(completed = isChecked))
+    }
 
     fun saveTask(task: Task) = viewModelScope.launch {
         dao.saveTask(task)
