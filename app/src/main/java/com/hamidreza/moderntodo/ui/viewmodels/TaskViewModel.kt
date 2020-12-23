@@ -9,9 +9,11 @@ import com.hamidreza.moderntodo.data.db.Task
 import com.hamidreza.moderntodo.data.db.TaskDao
 import com.hamidreza.moderntodo.utils.SortOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 
@@ -24,6 +26,10 @@ class TaskViewModel @ViewModelInject constructor(
     val searchQuery = MutableStateFlow("")
 
     val preferenceFlow = preferencesManager.preferencesFlow
+
+
+    private val tasksEventChannel = Channel<TasksEvent>()
+    val tasksEvent = tasksEventChannel.receiveAsFlow()
 
     private val tasksFlow = combine(
         searchQuery, preferenceFlow
@@ -56,6 +62,15 @@ class TaskViewModel @ViewModelInject constructor(
 
     fun saveTask(task: Task) = viewModelScope.launch {
         dao.saveTask(task)
+    }
+
+    fun deleteTask(task: Task) = viewModelScope.launch {
+        dao.deleteTask(task)
+        tasksEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
+    }
+
+    sealed class TasksEvent{
+        data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
     }
 
     data class Orders(val searchQuery: String, val sortOrder: SortOrder, val hideCompleted: Boolean)
