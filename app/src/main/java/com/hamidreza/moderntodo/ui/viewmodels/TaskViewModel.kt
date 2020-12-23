@@ -53,9 +53,15 @@ class TaskViewModel @ViewModelInject constructor(
 
 
 
-    fun onItemClick(task: Task){
+    fun onTaskSelected(task: Task) = viewModelScope.launch {
+        tasksEventChannel.send(TasksEvent.NavigateToEditTaskScreen(task))
 
     }
+
+    fun onAddNewTaskClick() = viewModelScope.launch {
+        tasksEventChannel.send(TasksEvent.NavigateToAddTaskScreen)
+    }
+
     fun onCheckBoxClick(task: Task, isChecked: Boolean) = viewModelScope.launch {
         dao.updateTask(task.copy(completed = isChecked))
     }
@@ -70,6 +76,8 @@ class TaskViewModel @ViewModelInject constructor(
     }
 
     sealed class TasksEvent{
+        object NavigateToAddTaskScreen : TasksEvent()
+        data class NavigateToEditTaskScreen(val task: Task) : TasksEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
     }
 

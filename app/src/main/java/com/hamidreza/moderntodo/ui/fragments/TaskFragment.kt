@@ -6,6 +6,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -40,7 +41,7 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
             taskAdapter.submitList(it)
         }
         binding.fabAddTask.setOnClickListener {
-
+            viewModel.onAddNewTaskClick()
         }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
@@ -51,6 +52,14 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
                             .setAction("UNDO") {
                                 viewModel.saveTask(event.task)
                             }.show()
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToAddTaskScreen -> {
+                        val action = TaskFragmentDirections.actionTaskFragmentToAddEditTaskFragment(task = null,title = "New Task")
+                        findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToEditTaskScreen -> {
+                        val action = TaskFragmentDirections.actionTaskFragmentToAddEditTaskFragment(event.task,"Edit Task")
+                        findNavController().navigate(action)
                     }
                 }
             }
@@ -141,7 +150,7 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
     }
 
     override fun onItemClick(task: Task) {
-
+        viewModel.onTaskSelected(task)
     }
 
     override fun onCheckBoxClick(task: Task, isChecked: Boolean) {
