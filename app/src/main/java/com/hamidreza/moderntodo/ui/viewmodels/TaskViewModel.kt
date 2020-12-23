@@ -20,6 +20,7 @@ class TaskViewModel @ViewModelInject constructor(private val dao: TaskDao) : Vie
     val searchQuery = MutableStateFlow("")
     val sortOrder = MutableStateFlow(SortOrder.BY_NAME)
     val hideCompleted = MutableStateFlow(false)
+    val x = 10
 
     private val tasksFlow = combine(
         searchQuery,sortOrder,hideCompleted
