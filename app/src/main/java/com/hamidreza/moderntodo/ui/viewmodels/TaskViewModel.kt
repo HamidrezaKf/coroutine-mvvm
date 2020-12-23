@@ -75,10 +75,22 @@ class TaskViewModel @ViewModelInject constructor(
         tasksEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
     }
 
+    fun onAddEditResult(result:Int){
+        when(result){
+            0 -> showTaskSavedConfirmationMessage("Task added")
+            1 -> showTaskSavedConfirmationMessage("Task updated")
+        }
+    }
+
+    private fun showTaskSavedConfirmationMessage(msg: String) = viewModelScope.launch {
+        tasksEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(msg))
+    }
+
     sealed class TasksEvent{
         object NavigateToAddTaskScreen : TasksEvent()
         data class NavigateToEditTaskScreen(val task: Task) : TasksEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
+        data class ShowTaskSavedConfirmationMessage(val msg: String) : TasksEvent()
     }
 
     data class Orders(val searchQuery: String, val sortOrder: SortOrder, val hideCompleted: Boolean)
