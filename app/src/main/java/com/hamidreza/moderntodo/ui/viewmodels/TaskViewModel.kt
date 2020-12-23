@@ -4,6 +4,7 @@ import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.hamidreza.moderntodo.data.PreferencesManager
 import com.hamidreza.moderntodo.data.db.Task
 import com.hamidreza.moderntodo.data.db.TaskDao
 import com.hamidreza.moderntodo.utils.SortOrder
@@ -15,21 +16,33 @@ import kotlinx.coroutines.launch
 
 
 @ExperimentalCoroutinesApi
-class TaskViewModel @ViewModelInject constructor(private val dao: TaskDao) : ViewModel() {
+class TaskViewModel @ViewModelInject constructor(
+    private val dao: TaskDao,
+    private val preferencesManager: PreferencesManager
+) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
-    val sortOrder = MutableStateFlow(SortOrder.BY_NAME)
-    val hideCompleted = MutableStateFlow(false)
-    val x = 10
+
+    val preferenceFlow = preferencesManager.preferencesFlow
 
     private val tasksFlow = combine(
-        searchQuery,sortOrder,hideCompleted
-    ){
-        searchQuery,sortOrder,hideCompleted ->
-        Orders(searchQuery, sortOrder, hideCompleted)
+        searchQuery, preferenceFlow
+    ) { searchQuery, preferenceFlow ->
+        Orders(searchQuery, preferenceFlow.sortOrder, preferenceFlow.hideCompleted)
     }.flatMapLatest {
-        dao.getTasks(it.searchQuery,it.sortOrder,it.hideCompleted)
+        dao.getTasks(it.searchQuery, it.sortOrder, it.hideCompleted)
     }
+
+    fun onSortOrderSelecte(sortOrder: SortOrder) =
+        viewModelScope.launch {
+            preferencesManager.updateSortOrder(sortOrder)
+        }
+
+    suspend fun onHideCompletedClick(hideCompleted: Boolean) =
+        viewModelScope.launch {
+            preferencesManager.updateHideCompleted(hideCompleted)
+        }
+
 
     val getTasks = tasksFlow.asLiveData()
 
@@ -37,5 +50,5 @@ class TaskViewModel @ViewModelInject constructor(private val dao: TaskDao) : Vie
         dao.saveTask(task)
     }
 
-    data class Orders(val searchQuery:String, val sortOrder: SortOrder, val hideCompleted:Boolean )
+    data class Orders(val searchQuery: String, val sortOrder: SortOrder, val hideCompleted: Boolean)
 }
