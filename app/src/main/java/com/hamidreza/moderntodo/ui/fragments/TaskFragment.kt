@@ -2,6 +2,7 @@ package com.hamidreza.moderntodo.ui.fragments
 
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
@@ -49,6 +50,18 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
             val result = bundle.getInt("add_edit_result")
             viewModel.onAddEditResult(result)
         }
+        setFragmentResultListener("delete_request"){ _, bundle ->
+            val result = bundle.getInt("delete_result")
+            val completedTasks = arrayListOf<Task>()
+            for (i in taskAdapter.currentList){
+               if (i.completed == true) completedTasks.add(i)
+            }
+            if (completedTasks.size >= 1){
+                viewModel.onDeleteResult(result)
+            }else {
+                Snackbar.make(requireView(),"There is no complete task", Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.tasksEvent.collect { event ->
@@ -68,6 +81,13 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
                         findNavController().navigate(action)
                     }
                     is TaskViewModel.TasksEvent.ShowTaskSavedConfirmationMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToDeleteAllCompletedScreen -> {
+                        val action = TaskFragmentDirections.actionGlobalDeleteAllCompletedDialogFragment()
+                        findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.ShowDeleteCompletedTaskMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }
@@ -146,7 +166,7 @@ class TaskFragment : Fragment(R.layout.fragment_task), TaskAdapter.OnItemClickLi
                 true
             }
             R.id.action_delete_all_completed_tasks -> {
-
+                viewModel.onDeleteAllCompletedClick()
                 true
             }
             else -> super.onOptionsItemSelected(item)
